@@ -24,8 +24,6 @@ type
    procedure WndProc(var TheMessage: TLMessage); override;
   end;
 
-
-
   TForm1 = class(TForm)
     Memo1: TMemo;
     PageControl1: TPageControl;
@@ -33,6 +31,8 @@ type
     TabSheet2: TTabSheet;
     TabSheet3: TTabSheet;
     procedure FormCreate(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
+    procedure PageControl1Changing(Sender: TObject; var AllowChange: Boolean);
     procedure PageControl1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
   private
@@ -100,6 +100,10 @@ begin
        if l then Form1.memo1.Lines.Add('WndProc true');
        inherited
     end
+    else
+    if (TheMessage.msg=CN_NOTIFY) then begin
+       inherited;
+    end
     else inherited;
 end;
 
@@ -110,13 +114,23 @@ begin
     myPageControl.Align:=alTop;
     myPageControl.AddTabSheet;
     myPageControl.AddTabSheet;
-    //myPageControl.ControlStyle:=myPageControl.ControlStyle+[csDoubleClicks];
-
+    myPageControl.ControlStyle:=myPageControl.ControlStyle+[csDoubleClicks];
     //
     myPageControl.OnClick:=@myPageControl_onClick;
     myPageControl.OnDblClick:=@myPageControl_OnDblClick;
     myPageControl.OnMouseDown:=@PageControl1MouseDown;
-    // myPageControl.MouseDown();
+    myPageControl.OnChange:=@PageControl1Change;
+    myPageControl.OnChanging:=@PageControl1Changing;
+end;
+
+procedure TForm1.PageControl1Change(Sender: TObject);
+begin
+    Form1.memo1.Lines.Add('PageControl1Change');
+end;
+
+procedure TForm1.PageControl1Changing(Sender: TObject; var AllowChange: Boolean);
+begin
+    Form1.memo1.Lines.Add('PageControl1Changing');
 end;
 
 end.

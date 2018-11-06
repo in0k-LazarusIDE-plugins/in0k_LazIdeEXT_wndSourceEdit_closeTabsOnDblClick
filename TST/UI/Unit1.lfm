@@ -7,7 +7,7 @@ object Form1: TForm1
   ClientHeight = 467
   ClientWidth = 320
   OnCreate = FormCreate
-  LCLVersion = '1.6.4.0'
+  LCLVersion = '2.0.0.2'
   object Memo1: TMemo
     Left = 0
     Height = 218
@@ -29,6 +29,8 @@ object Form1: TForm1
     TabIndex = 1
     TabOrder = 1
     Visible = False
+    OnChange = PageControl1Change
+    OnChanging = PageControl1Changing
     OnMouseDown = PageControl1MouseDown
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
