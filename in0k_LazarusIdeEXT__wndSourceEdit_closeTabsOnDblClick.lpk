@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="in0k_LazarusIdeEXT__wndSourceEdit_closeTabsOnDblClick"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="srcPKG;srcEXT\in0k_lazarusIdeSRC__expertCORE;srcEXT\in0k_lazarusIdeSRC__wndDEBUG;srcEXT\in0k_lazarusIdeSRC__expertTemplates;srcEXT\in0k_lazarusIdeSRC__fuckUpControl"/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="9">
+      <Item1>
+        <Filename Value="in0k_LazarusIdeEXT__REGISTER.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="in0k_LazarusIdeEXT__REGISTER"/>
+      </Item1>
+      <Item2>
+        <Filename Value="in0k_LazarusIdeSRC__SETTINGs.inc"/>
+        <Type Value="Include"/>
+      </Item2>
+      <Item3>
+        <Filename Value="srcPKG\in0k_LazarusIdePLG__wndSourceEdit_closeTabsOnDblClick.pas"/>
+        <UnitName Value="in0k_LazarusIdePLG__wndSourceEdit_closeTabsOnDblClick"/>
+      </Item3>
+      <Item4>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__expertCORE\in0k_lazarusIdeSRC__expertCORE.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__expertCORE"/>
+      </Item4>
+      <Item5>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__wndDEBUG\in0k_lazarusIdeSRC__wndDEBUG.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__wndDEBUG"/>
+      </Item5>
+      <Item6>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__expertTemplates\in0k_lazarusIdeSRC__TMPLT_4SourceWindow.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__TMPLT_4SourceWindow"/>
+      </Item6>
+      <Item7>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__expertTemplates\in0k_lazarusIdeSRC__TMPLT_4SourceEditor.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__TMPLT_4SourceEditor"/>
+      </Item7>
+      <Item8>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__fuckUpControl\in0k_lazarusIdeSRC__tControls_fuckUpWndProc.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__tControls_fuckUpWndProc"/>
+      </Item8>
+      <Item9>
+        <Filename Value="srcPKG\src_fuckUp_NoteBOOK.pas"/>
+        <UnitName Value="src_fuckUp_NoteBOOK"/>
+      </Item9>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="IDEIntf"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

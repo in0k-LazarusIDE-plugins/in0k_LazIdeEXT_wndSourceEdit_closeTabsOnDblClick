@@ -5,15 +5,14 @@ unit Unit1;
 interface
 
 uses
-  messages, LMessages,
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  StdCtrls;
+  messages, LMessages, Classes, SysUtils, FileUtil, ExtendedNotebook, Forms,
+  Controls, Graphics, Dialogs, ComCtrls, StdCtrls;
 
 type
 
   { TForm1 }
 
- TmyPageControl=class(TPageControl)
+ TmyPageControl=class(TExtendedNotebook)
   protected
    procedure WMLButtonDBLCLK(var Message: TLMLButtonDblClk); message LM_LBUTTONDBLCLK;
    procedure WMNCLButtonDblClk(var Message: TMessage); message LM_NCLBUTTONDBLCLK;
@@ -25,8 +24,9 @@ type
   end;
 
   TForm1 = class(TForm)
+    ExtendedNotebook1: TExtendedNotebook;
     Memo1: TMemo;
-    PageControl1: TPageControl;
+    PageControl1: TExtendedNotebook;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
     TabSheet3: TTabSheet;
@@ -55,33 +55,33 @@ procedure TForm1.PageControl1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var s:string;
 begin
-    s:='MouseDown';
+   { s:='MouseDown';
     if (ssDouble in Shift)
-    then s:=s+' '+'ssDouble';
+    then s:=s+' '+'ssDouble ';
     //
-    memo1.Lines.Add(s);
+    memo1.Lines.Add(s+inttostr(self.PageControl1.ActivePageIndex));  }
 end;
 
 procedure TForm1.myPageControl_onClick(Sender: TObject);
 begin
-    memo1.Lines.Add('myPageControl_onClick');
+    //memo1.Lines.Add('myPageControl_onClick '+inttostr(self.PageControl1.ActivePageIndex));
 end;
 
 procedure TmyPageControl.WMLButtonDBLCLK(var Message: TLMLButtonDblClk); //message LM_LBUTTONDBLCLK;
 begin
     inherited;
-    Form1.memo1.Lines.Add('WMLButtonDBLCLK');
+    //Form1.memo1.Lines.Add('WMLButtonDBLCLK '+inttostr(self.ActivePageIndex));
 end;
 
 procedure TForm1.myPageControl_OnDblClick(Sender: TObject);
 begin
-    Form1.memo1.Lines.Add('myPageControl_OnDblClick');
+    //Form1.memo1.Lines.Add('myPageControl_OnDblClick '+inttostr(self.PageControl1.ActivePageIndex));
 end;
 
 procedure TmyPageControl.WMNCLButtonDblClk(var Message: TMessage);// message LM_NCLBUTTONDBLCLK;
 begin
     inherited;
-    Form1.memo1.Lines.Add('WMNCLButtonDblClk');
+    //Form1.memo1.Lines.Add('WMNCLButtonDblClk '+inttostr(self.ActivePageIndex));
 end;
 
 var l:boolean;
@@ -90,14 +90,16 @@ procedure TmyPageControl.WndProc(var TheMessage: TLMessage);
 var i:integer;
 begin
     if TheMessage.msg=LM_LBUTTONDOWN then begin
-       i:=TabIndex;
+//       i:=TabIndex;
+       Form1.memo1.Lines.Add('WndProc LM_LBUTTONDOWN '+inttostr(self.ActivePageIndex));
        inherited;
-       l:=i=TabIndex;
+//       l:=i=TabIndex;
     end
     else
-    if (TheMessage.msg=LM_LButtonDBLCLK)and l then begin
-       Form1.memo1.Lines.Add('WndProc LM_LButtonDBLCLK');
-       if l then Form1.memo1.Lines.Add('WndProc true');
+    if (TheMessage.msg=LM_LButtonDBLCLK){and l} then begin
+       //Form1.memo1.Lines.Add('WndProc LM_LButtonDBLCLK');
+       //if l then Form1.memo1.Lines.Add('WndProc true');
+       Form1.memo1.Lines.Add('WndProc LM_LButtonDBLCLK '+inttostr(self.ActivePageIndex));
        inherited
     end
     else
