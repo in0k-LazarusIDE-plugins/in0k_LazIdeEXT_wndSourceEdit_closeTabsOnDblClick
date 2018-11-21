@@ -20,7 +20,7 @@ type
 
  tFuckUP_NoteBOOK=class(tIn0k_lazIdeSRC__tControls_fuckUpLAIR_CORE)
   protected
-   _LastMouseInfo_:TLastMouseInfo;
+    //_LastMouseInfo_:TLastMouseInfo;
     procedure _do_mouseDoubleClick_(const Control:TControl; const Message:Cardinal);
   public
     procedure Applay4Control(const Control:TControl);
@@ -42,12 +42,24 @@ implementation {%region --- возня с ДЕБАГОМ (включить/вы�
 type
  _tFuckUp_node_=class(tIn0k_lazIdeSRC__tControls_fuckUpNODE)
    protected
-     function _handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal; inline;
+     //function _handle__2_0_0__BEFO_1(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal; inline;
+     //function _handle__2_0_0__BEFO(const {%H-}TheMessage:TLMessage);
+   protected
+     function _handle__1_6_4__BEFO(const {%H-}TheMessage:TLMessage):Cardinal;
    protected
      procedure fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage); override;
    end;
 
+function _tFuckUp_node_._handle__1_6_4__BEFO(const {%H-}TheMessage:TLMessage):Cardinal;
+begin
+    result:=0;
+    case TheMessage.msg of
+        LM_LBUTTONDBLCLK: result:=LM_LBUTTONDBLCLK;
+    end;
+   //
+end;
 
+(*
 function _tFuckUp_node_._handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal;
 begin
     result:=CheckMouseButtonDownUp(TWinControl(_ctrl_).Handle,nil,tFuckUP_NoteBOOK(_ownr_)._LastMouseInfo_,AMousePos,AButton,AMouseDown);
@@ -79,6 +91,21 @@ begin
         // СЛУЧИЛОСЬ! событие Двойной-Клик случилось!
         tFuckUP_NoteBOOK(_ownr_)._do_mouseDoubleClick_(_ctrl_,r);
     end;
+end;*)
+
+procedure _tFuckUp_node_.fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage);
+var r:Cardinal;
+begin
+    r:=_handle__1_6_4__BEFO(TheMessage);
+    //
+    if (r = LM_LBUTTONDBLCLK)or
+       (r = LM_RBUTTONDBLCLK)or
+       (r = LM_MBUTTONDBLCLK)or
+       (r = LM_XBUTTONDBLCLK)
+    then begin
+        // СЛУЧИЛОСЬ! событие Двойной-Клик случилось!
+        tFuckUP_NoteBOOK(_OWNER_)._do_mouseDoubleClick_(_ctrl_,r);
+    end;
 end;
 
 {%endregion}
@@ -87,13 +114,18 @@ procedure tFuckUP_NoteBOOK.Applay4Control(const Control:TControl);
 begin
     if NOT (Assigned(Control) and (Control is TCustomTabControl)) then EXIT;
     //
-   _GetNODE_(Control,_tFuckUp_node_);
+   _NODE_GET_(Control,_tFuckUp_node_);
 end;
 
 procedure tFuckUP_NoteBOOK._do_mouseDoubleClick_(const Control:TControl; const Message:Cardinal);
 var IDECommand:TIDECommand;
 begin
-    IDECommand:=IDECommandList.FindIDECommand(ecClose);
+   {$ifDef _debugLOG_}
+   DEBUG('ddddddddddddddddddddddddddddd', 'ddddddddd');
+   {$endIf}
+
+
+    {IDECommand:=IDECommandList.FindIDECommand(ecClose);
     if Assigned(IDECommand) then begin
         {$ifDef _debugLOG_}
         DEBUG('ddddddddddddddddddddddddddddd', 'ddddddddd');
@@ -101,7 +133,7 @@ begin
 
         IDECommand.Execute(TPageControl(Control).ActivePage);
     end;
-
+    }
 
 end;
 

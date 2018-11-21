@@ -4,7 +4,6 @@
 
 unit in0k_LazarusIdeEXT__wndSourceEdit_closeTabsOnDblClick;
 
-{$warn 5023 off : no warning about unused units}
 interface
 
 uses
