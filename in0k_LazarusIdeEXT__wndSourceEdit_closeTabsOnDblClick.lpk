@@ -8,7 +8,7 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <OtherUnitFiles Value="srcPKG;srcEXT\in0k_lazarusIdeSRC__expertCORE;srcEXT\in0k_lazarusIdeSRC__wndDEBUG;srcEXT\in0k_lazarusIdeSRC__expertTemplates;srcEXT\in0k_lazarusIdeSRC__fuckUpControl"/>
+        <OtherUnitFiles Value="srcEXT\in0k_lazarusIdeSRC__expertCORE;srcEXT\in0k_lazarusIdeSRC__wndDEBUG;srcEXT\in0k_lazarusIdeSRC__fuckUpControl;srcEXT\in0k_lazarusIdeSRC__expertTemplates;srcPKG"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
@@ -43,12 +43,12 @@
         <UnitName Value="in0k_lazarusIdeSRC__TMPLT_4SourceEditor"/>
       </Item7>
       <Item8>
-        <Filename Value="srcEXT\in0k_lazarusIdeSRC__fuckUpControl\in0k_lazarusIdeSRC__tControls_fuckUpWndProc.pas"/>
-        <UnitName Value="in0k_lazarusIdeSRC__tControls_fuckUpWndProc"/>
-      </Item8>
-      <Item9>
         <Filename Value="srcPKG\src_fuckUp_NoteBOOK.pas"/>
         <UnitName Value="src_fuckUp_NoteBOOK"/>
+      </Item8>
+      <Item9>
+        <Filename Value="srcEXT\in0k_lazarusIdeSRC__fuckUpControl\in0k_lazarusIdeSRC__tControl_fuckUpWndProc.pas"/>
+        <UnitName Value="in0k_lazarusIdeSRC__tControl_fuckUpWndProc"/>
       </Item9>
     </Files>
     <RequiredPkgs Count="2">

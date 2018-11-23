@@ -7,8 +7,7 @@ interface
 {$include in0k_LazarusIdeSRC__Settings.inc}
 
 uses {$ifDef in0k_LazarusIdeEXT__DEBUG} in0k_lazarusIdeSRC__wndDEBUG, {$endIf}
-  in0k_lazarusIdeSRC__tControls_fuckUpWndProc,
-  IDECommands,
+  in0k_lazarusIdeSRC__tControl_fuckUpWndProc,
   //---
   Controls,
   ComCtrls,
@@ -18,12 +17,21 @@ uses {$ifDef in0k_LazarusIdeEXT__DEBUG} in0k_lazarusIdeSRC__wndDEBUG, {$endIf}
 
 type
 
- tFuckUP_NoteBOOK=class(tIn0k_lazIdeSRC__tControls_fuckUpLAIR_CORE)
+  // событие - ДВОЙНОЕ нажатие мышки
+  // @prm Control объект "на котором" произошло сыбытие
+  // @prm Message какое именно событи произошло (LM_LBUTTONDBLCLK.. и т.д.)
+ mFuckUP_TPageControl_onDblCLK=procedure(const Control:TPageControl; const Message:Cardinal) of object;
+
+ tFuckUP_TPageControl_onDblCLK=class(tIn0k_lazIdeSRC__tControls_fuckUpWndProcLAIR_CORE)
   protected
-    //_LastMouseInfo_:TLastMouseInfo;
-    procedure _do_mouseDoubleClick_(const Control:TControl; const Message:Cardinal);
+   _m_EVENT_:mFuckUP_TPageControl_onDblCLK;
+    procedure _do_EVENT_(const Control:TControl; const TheMessage:Cardinal);
   public
     procedure Applay4Control(const Control:TControl);
+  public
+    property OnMouseDblCLK:mFuckUP_TPageControl_onDblCLK read _m_EVENT_ write _m_EVENT_;
+  public
+    constructor Create;
   end;
 
 implementation {%region --- возня с ДЕБАГОМ (включить/выключить) -- /fold}
@@ -37,66 +45,110 @@ implementation {%region --- возня с ДЕБАГОМ (включить/вы�
     {$unDef _debugLOG_}
 {$endIf}
 {%endregion}
+uses LCLVersion;
+{%region --- СООТВЕТСТВИЕ ВЕРСИЯМ --------------------------------- /fold}
+// ПОИСК ДВОЙНОГО КЛИКА
+{$define _NOT_TESTED_}
+{$if (lcl_fullversion=01040400)} //< test by in0k
+    {$unDef _NOT_TESTED_}
+    {$define _wndProcUse_SIMPLE_}
+{$endIf}
+{$if (lcl_fullversion=01060004)} //< test by in0k
+    {$unDef _NOT_TESTED_}
+    {$define _wndProcUse_SIMPLE_}
+{$endIf}
+{$if (lcl_fullversion=01080400)} //< test by in0k
+    {$unDef _NOT_TESTED_}
+    {$define _wndProcUse_COMMON_LCL_}
+{$endIf}
+{$if (lcl_fullversion=02000002)} //< test by in0k
+    {$unDef _NOT_TESTED_}
+    {$define _wndProcUse_COMMON_LCL_}
+{$endIf}
+//--------------------
+{$ifdef _NOT_TESTED_}
+    {$if (01080000<lcl_fullversion)}
+      {$define _wndProcUse_COMMON_LCL_}
+    {$else}
+      {$define _wndProcUse_SIMPLE_}
+    {$endIf}
+    //-----
+    {$WARNING 'recording of events `lm_XbuttonDBLclk` NOT tested in this version !'}
+    {$WARNING 'If You have this "code" will work NOT correctly, please inform the developer.'}
+{$endIf}
+{%endregion}
 
 {%region --- _tFuckUp_node_ --------------------------------------- /fold}
 type
- _tFuckUp_node_=class(tIn0k_lazIdeSRC__tControls_fuckUpNODE)
+ _tFuckUp_node_=class(tIn0k_lazIdeSRC__tControls_fuckUpWndProcNODE)
+   {$ifdef _wndProcUse_SIMPLE_}
    protected
-     //function _handle__2_0_0__BEFO_1(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal; inline;
-     //function _handle__2_0_0__BEFO(const {%H-}TheMessage:TLMessage);
+     function _wndProc_SIMPLE_(const TheMessage:TLMessage):Cardinal;
+   {$endIf}
+   {$ifdef _wndProcUse_COMMON_LCL_}
    protected
-     function _handle__1_6_4__BEFO(const {%H-}TheMessage:TLMessage):Cardinal;
+    _LastMouseInfo_:TLastMouseInfo;
+     function _wndProc_COMMON_LCL_handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal; {$ifOpt D-}inline;{$endIf}
+     function _wndProc_COMMON_LCL_(const TheMessage:TLMessage):Cardinal;
+   {$endIf}
    protected
      procedure fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage); override;
    end;
 
-function _tFuckUp_node_._handle__1_6_4__BEFO(const {%H-}TheMessage:TLMessage):Cardinal;
-begin
-    result:=0;
+//------------------------------------------------------------------------------
+
+{$ifdef _wndProcUse_SIMPLE_}
+function _tFuckUp_node_._wndProc_SIMPLE_(const TheMessage:TLMessage):Cardinal;
+begin //< САМА система сообщает нам о события ДвойногоКлика
     case TheMessage.msg of
-        LM_LBUTTONDBLCLK: result:=LM_LBUTTONDBLCLK;
+        LM_LBUTTONDBLCLK,
+        LM_RBUTTONDBLCLK,
+        LM_MBUTTONDBLCLK,
+        LM_XBUTTONDBLCLK: result:=TheMessage.msg;
+        else result:=0;
     end;
-   //
 end;
+{$endIf}
 
-(*
-function _tFuckUp_node_._handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal;
+//------------------------------------------------------------------------------
+
+{$ifdef _wndProcUse_COMMON_LCL_}
+
+function _tFuckUp_node_._wndProc_COMMON_LCL_handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal;
 begin
-    result:=CheckMouseButtonDownUp(TWinControl(_ctrl_).Handle,nil,tFuckUP_NoteBOOK(_ownr_)._LastMouseInfo_,AMousePos,AButton,AMouseDown);
+    result:=CheckMouseButtonDownUp(TWinControl(_ctrl_).Handle,nil,_LastMouseInfo_,AMousePos,AButton,AMouseDown);
 end;
 
-procedure _tFuckUp_node_.fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage);
-var r:Cardinal;
+function _tFuckUp_node_._wndProc_COMMON_LCL_(const TheMessage:TLMessage):Cardinal;
 begin
     // !!! ВСЕ СОДРАНО !!! оригинал смотри
     //     win32callback.inc(MainUnit win32int.pp)
     //     метод TWindowProcHelper.DoWindowProc применение DoMsgMouseDownUpClick
     case TheMessage.msg of
-      LM_LBUTTONDOWN:r:=_handle_(TLMMouse(TheMessage).Pos, 1, true);
-      LM_LBUTTONUP  :r:=_handle_(TLMMouse(TheMessage).Pos, 1, false);
-      LM_RBUTTONDOWN:r:=_handle_(TLMMouse(TheMessage).Pos, 2, true);
-      LM_RBUTTONUP  :r:=_handle_(TLMMouse(TheMessage).Pos, 2, false);
-      LM_MBUTTONDOWN:r:=_handle_(TLMMouse(TheMessage).Pos, 3, true);
-      LM_MBUTTONUP  :r:=_handle_(TLMMouse(TheMessage).Pos, 3, false);
-      LM_XBUTTONDOWN:r:=_handle_(TLMMouse(TheMessage).Pos, 4, true);
-      LM_XBUTTONUP  :r:=_handle_(TLMMouse(TheMessage).Pos, 4, false);
-      else           r:= 0;
+      LM_LBUTTONDOWN:result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 1, true);
+      LM_LBUTTONUP  :result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 1, false);
+      LM_RBUTTONDOWN:result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 2, true);
+      LM_RBUTTONUP  :result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 2, false);
+      LM_MBUTTONDOWN:result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 3, true);
+      LM_MBUTTONUP  :result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 3, false);
+      LM_XBUTTONDOWN:result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 4, true);
+      LM_XBUTTONUP  :result:=_wndProc_COMMON_LCL_handle_(TLMMouse(TheMessage).Pos, 4, false);
+      else           result:= 0;
     end;
-    //
-    if (r = LM_LBUTTONDBLCLK)or
-       (r = LM_RBUTTONDBLCLK)or
-       (r = LM_MBUTTONDBLCLK)or
-       (r = LM_XBUTTONDBLCLK)
-    then begin
-        // СЛУЧИЛОСЬ! событие Двойной-Клик случилось!
-        tFuckUP_NoteBOOK(_ownr_)._do_mouseDoubleClick_(_ctrl_,r);
-    end;
-end;*)
+end;
+{$endIf}
+
+//------------------------------------------------------------------------------
 
 procedure _tFuckUp_node_.fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage);
 var r:Cardinal;
 begin
-    r:=_handle__1_6_4__BEFO(TheMessage);
+    {$ifdef _wndProcUse_SIMPLE_}
+    r:=_wndProc_SIMPLE_(TheMessage);
+    {$endIf}
+    {$ifdef _wndProcUse_COMMON_LCL_}
+    r:=_wndProc_COMMON_LCL_(TheMessage);
+    {$endIf}
     //
     if (r = LM_LBUTTONDBLCLK)or
        (r = LM_RBUTTONDBLCLK)or
@@ -104,51 +156,46 @@ begin
        (r = LM_XBUTTONDBLCLK)
     then begin
         // СЛУЧИЛОСЬ! событие Двойной-Клик случилось!
-        tFuckUP_NoteBOOK(_OWNER_)._do_mouseDoubleClick_(_ctrl_,r);
+        tFuckUP_TPageControl_onDblCLK(_OWNER_)._do_EVENT_(_ctrl_,r);
     end;
 end;
 
 {%endregion}
 
-procedure tFuckUP_NoteBOOK.Applay4Control(const Control:TControl);
+//------------------------------------------------------------------------------
+
+constructor tFuckUP_TPageControl_onDblCLK.Create;
 begin
-    if NOT (Assigned(Control) and (Control is TCustomTabControl)) then EXIT;
-    //
-   _NODE_GET_(Control,_tFuckUp_node_);
+    inherited;
+   _m_EVENT_:=NIL;
 end;
 
-procedure tFuckUP_NoteBOOK._do_mouseDoubleClick_(const Control:TControl; const Message:Cardinal);
-var IDECommand:TIDECommand;
+// subClassing объекто ОПРЕДЕЛЕННОГО типа
+procedure tFuckUP_TPageControl_onDblCLK.Applay4Control(const Control:TControl);
 begin
-   {$ifDef _debugLOG_}
-   DEBUG('ddddddddddddddddddddddddddddd', 'ddddddddd');
-   {$endIf}
+    if Assigned(Control) and (Control is TPageControl)
+    then _NODE_GET_(Control,_tFuckUp_node_);
+end;
 
-
-    {IDECommand:=IDECommandList.FindIDECommand(ecClose);
-    if Assigned(IDECommand) then begin
+// вызов РОДИТЕЛЬСКОГО события (возможно много ненужных проверок)
+procedure tFuckUP_TPageControl_onDblCLK._do_EVENT_(const Control:TControl; const TheMessage:Cardinal);
+begin
+    if Assigned(Control) and (Control is TPageControl) then begin
         {$ifDef _debugLOG_}
-        DEBUG('ddddddddddddddddddddddddddddd', 'ddddddddd');
+        DEBUG(self.ClassName+addr2txt(self),'_do_EVENT_: '+Control.ClassName+addr2txt(Control));
         {$endIf}
-
-        IDECommand.Execute(TPageControl(Control).ActivePage);
+        if Assigned(_m_EVENT_) then begin
+           _m_EVENT_(TPageControl(Control),TheMessage);
+        end;
+    end
+    else begin
+        {$ifDef _debugLOG_}
+        if Assigned(Control)
+        then DEBUG(self.ClassName+addr2txt(self),'_do_EVENT_: WRONG! Control('+Control.ClassName+addr2txt(Control)+') is NOT TPageControl')
+        else DEBUG(self.ClassName+addr2txt(self),'_do_EVENT_: WRONG! Control=NIL');
+        {$endIf}
     end;
-    }
-
 end;
-
-//const //< тут возможно придется определять относительно ВЕРСИИ ЛАЗАРУСА
-//_c_IDECommand_OpnOI_IdeCODE_=ecToggleObjectInsp;
-
-{
-function Form_ShowByCMD:TCustomForm;
-var IDECommand:TIDECommand;
-begin
-result:=NIL;    //idewi
-// ищем команду
-IDECommand:=IDECommandList.FindIDECommand(_c_IDECommand_OpnOI_IdeCODE_);
-if Assigned(IDECommand) and IDECommand.Execute(Application.MainForm) then begin
-}
 
 end.
 

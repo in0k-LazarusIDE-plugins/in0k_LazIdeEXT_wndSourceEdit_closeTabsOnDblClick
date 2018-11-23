@@ -10,7 +10,9 @@
 {$define in0k_LazarusIdeEXT__DEBUG}
 
 
+{$define in0k_LazarusIdePLG__wndSourceEdit_closeTabsOnDblClick---reCaptionMenuItems}
 
 {$ifDef in0k_LazarusIdeEXT__DEBUG}
-    {.$define in0k_lazarusIdeSRC__tControl_fuckUpWndProc--DEBUG}
+    {$define in0k_lazarusIdeSRC__tControl_fuckUpWndProc--DEBUG}
+   //   in0k_lazarusIdeSRC__tControls_fuckUpWndProc--DEBUG
 {$endIf}
