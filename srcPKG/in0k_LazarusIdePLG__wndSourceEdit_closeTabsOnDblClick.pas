@@ -13,13 +13,14 @@ uses {$ifDef in0k_LazarusIdeEXT__DEBUG}
   in0k_lazarusIdeSRC__TMPLT_4SourceWindow,
   src_fuckUp_NoteBOOK,
   //----
+  LCLVersion,
+  //----
   IDECommands,
   MenuIntf,
-  LazMsgDialogs,
   //----
   ExtendedNotebook,
   Controls, ComCtrls, contnrs,
-  LCLType, LCLProc, UITypes,
+  LCLType, LCLProc,
   Menus, Forms, Classes, LMessages;
 
 type
@@ -64,6 +65,25 @@ implementation {%region --- возня с ДЕБАГОМ (включить/вы�
     {$unDef _debugLOG_}
 {$endIf}
 {%endregion}
+{%region --- QuestionDialog .. rePlace/reStore -------------------- /fold}
+
+// определяем в КАКОМ именно ЮНИТ использовать
+{$if (lcl_major<2)}
+  {$define ideDialogs_IDEDialogs}
+{$else}
+  {$define ideDialogs_LazMsgDialogs}
+{$endif}
+
+// прицепляем НЕОБХОДИМЫЕ библиотеки
+uses
+  {$IF     defined(ideDialogs_LazMsgDialogs)}
+  LazMsgDialogs
+  {$elseif defined(ideDialogs_IDEDialogs)}
+  IDEDialogs
+  {$else}{$error 'QuestionDialog NOT define'}{$endIf},
+  Dialogs;
+
+{%endregion --- QuestionDialog .. rePlace/reStore ------------------ }
 
 constructor tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick.Create;
 begin
@@ -264,12 +284,18 @@ end;
 //------------------------------------------------------------------------
 type
 _tWRK_close_ListOfPAGEs_=class(TThread)
+  {%region --- QuestionDialog .. rePlace/reStore ------------------ /fold}
   private
-   _originalIDE_LazQuestionDialog_:TLazQuestionDialog;
-    function _myLazQuestionDialog_(const aCaption, aMsg: string; DlgType: TMsgDlgType; Buttons: array of const; const HelpKeyword: string = ''):Integer;
+   {$if defined(ideDialogs_LazMsgDialogs)}
+   _originalIDE_QuestionDialog_:TLazQuestionDialog;
+   {$elseif defined(ideDialogs_IDEDialogs)}
+   _originalIDE_QuestionDialog_:TIDEQuestionDialog;
+   {$else}{$error 'QuestionDialog NOT define'}{$endIf}
+   function _myQuestionDialog_(const aCaption, aMsg: string; DlgType: TMsgDlgType; Buttons: array of const; const HelpKeyword: string = ''): Integer ;
   private
     procedure _LazQuestionDialog_rePlace_;
     procedure _LazQuestionDialog_reStore_;
+  {%endRegion}
   private
    _lastDialogRESULT_:Integer;
   private
@@ -294,40 +320,66 @@ end;
 
 //------------------------------------------------------------------------------
 
+{%region --- QuestionDialog .. rePlace/reStore ------------------ /fold}
+
 procedure _tWRK_close_ListOfPAGEs_._LazQuestionDialog_rePlace_;
 begin
-   _originalIDE_LazQuestionDialog_:=LazQuestionDialog;
-    LazQuestionDialog:=@_myLazQuestionDialog_;
+    {$if defined(ideDialogs_LazMsgDialogs)}
+   _originalIDE_QuestionDialog_:=LazQuestionDialog;
+    LazQuestionDialog:=@_myQuestionDialog_;
+    {$elseif defined(ideDialogs_IDEDialogs)}
+   _originalIDE_QuestionDialog_:=IDEQuestionDialog;
+    IDEQuestionDialog:=@_myQuestionDialog_;
+    {$else}{$error 'QuestionDialog NOT define'}{$endIf}
     {$ifDef _debugLOG_}
-    DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog rePlace '+mthd2txt(@_originalIDE_LazQuestionDialog_)+' -> '+mthd2txt(@LazQuestionDialog));
+        {$if defined(ideDialogs_LazMsgDialogs)}
+        DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog rePlace '+mthd2txt(@_originalIDE_QuestionDialog_)+' -> '+mthd2txt(@LazQuestionDialog));
+        {$elseif defined(ideDialogs_IDEDialogs)}
+        DEBUG(self.ClassName+addr2txt(self),'IDEQuestionDialog rePlace '+mthd2txt(@_originalIDE_QuestionDialog_)+' -> '+mthd2txt(@IDEQuestionDialog));
+        {$else}{$error 'QuestionDialog NOT define'}{$endIf}
     {$endIf}
 end;
 
 procedure _tWRK_close_ListOfPAGEs_._LazQuestionDialog_reStore_;
 begin
-    if LazQuestionDialog=@_myLazQuestionDialog_ then begin
-        LazQuestionDialog:=_originalIDE_LazQuestionDialog_;
+    {$if defined(ideDialogs_LazMsgDialogs)}
+    if LazQuestionDialog=@_myQuestionDialog_ then begin
+        LazQuestionDialog:=_originalIDE_QuestionDialog_;
         {$ifDef _debugLOG_}
         DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog reStore -> '+mthd2txt(@LazQuestionDialog));
         {$endIf}
     end
+    {$elseif defined(ideDialogs_IDEDialogs)}
+    if IDEQuestionDialog=@_myQuestionDialog_ then begin
+        IDEQuestionDialog:=_originalIDE_QuestionDialog_;
+        {$ifDef _debugLOG_}
+        DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog reStore -> '+mthd2txt(@IDEQuestionDialog));
+        {$endIf}
+    end
+    {$else}{$error 'QuestionDialog NOT define'}{$endIf}
     {$ifDef _debugLOG_}
     else begin
-        DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog reStore FAIL: '+mthd2txt(@LazQuestionDialog)+' <> _myLazQuestionDialog_');
+        {$if defined(ideDialogs_LazMsgDialogs)}
+        DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog reStore FAIL: '+mthd2txt(@LazQuestionDialog)+' <> _myQuestionDialog_');
+        {$elseif defined(ideDialogs_IDEDialogs)}
+        DEBUG(self.ClassName+addr2txt(self),'LazQuestionDialog reStore FAIL: '+mthd2txt(@IDEQuestionDialog)+' <> _myQuestionDialog_');
+        {$else}{$error 'QuestionDialog NOT define'}{$endIf}
     end
     {$endIf}
 end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-function _tWRK_close_ListOfPAGEs_._myLazQuestionDialog_(const aCaption, aMsg: string; DlgType: TMsgDlgType; Buttons: array of const; const HelpKeyword: string = ''):Integer;
+function _tWRK_close_ListOfPAGEs_._myQuestionDialog_(const aCaption, aMsg: string; DlgType: TMsgDlgType; Buttons: array of const; const HelpKeyword: string = ''): Integer ;
 begin
-    result:=_originalIDE_LazQuestionDialog_(aCaption,aMsg,DlgType,Buttons,HelpKeyword);
+    result:=_originalIDE_QuestionDialog_(aCaption,aMsg,DlgType,Buttons,HelpKeyword);
     {$ifDef _debugLOG_}
     DEBUG(self.ClassName+addr2txt(self),'QuestionDialog.result='+inttostr(result)+' Caption"'+aCaption+'"');
     {$endIf}
    _lastDialogRESULT_:=result;
 end;
+
+{%endregion}
 
 //------------------------------------------------------------------------------
 
