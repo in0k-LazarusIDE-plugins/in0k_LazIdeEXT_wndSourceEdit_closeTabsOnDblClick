@@ -1,4 +1,24 @@
 unit in0k_LazarusIdePLG__wndSourceEdit_closeTabsOnDblClick;
+//
+//------------------------------------------------------------------------------
+//
+//  Реализация "Эксперта":
+//
+//  1. Подготовительный этап.
+//      Перехватываем "активирование" окна редактирование кода.
+//      1-1 Настраиваем окно для определение события "двойного клика" на
+//          вкладке редактора.
+//      1-2 Находим, (до)настраиваем "ideMenuItem" управления вкладками.
+//
+//  2. Работа.
+//      Основываясь на состоянии клавиатуры в момент "двойного клика" выполняем
+//      одно из следующих действий.
+//      2-1 Закрыть ТЕКУЩУЮ вкладку.
+//      2-2 Закрыть ВСЕ вкладки кроме текущей.
+//      2-3 Закрыть все вкладки СЛЕВА от текущей.
+//      2-4 Закрыть все вкладки СПРАВА от текущей.
+//
+//------------------------------------------------------------------------------
 
 {$mode objfpc}{$H+}
 
@@ -8,8 +28,9 @@ interface
 
 uses {$ifDef in0k_LazarusIdeEXT__DEBUG}
       in0k_lazarusIdeSRC__wndDEBUG,
-      sysutils,
+      sysutils, //< для Exception
      {$endIf}
+  in0k_LazarusIdeSRC__SETTINGs,
   in0k_lazarusIdeSRC__TMPLT_4SourceWindow,
   src_fuckUp_NoteBOOK,
   //----
@@ -23,32 +44,44 @@ uses {$ifDef in0k_LazarusIdeEXT__DEBUG}
   LCLType, LCLProc,
   Menus, Forms, Classes, LMessages;
 
+
+{$if (cEvent_MouseButtonDblCLK=LM_LBUTTONDBLCLK)or
+     (cEvent_MouseButtonDblCLK=LM_RBUTTONDBLCLK)or
+     (cEvent_MouseButtonDblCLK=LM_MBUTTONDBLCLK)or
+     (cEvent_MouseButtonDblCLK=LM_XBUTTONDBLCLK)  }
+{$else}
+    {$error 'cEvent_MouseButtonDblCLK WRONG! see `in0k_LazarusIdeSRC__SETTINGs.pas`'}
+{$endIf}
+
+
 type
 
  tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick=class(tIn0k_lazIdeSRC__TMPLT_4SourceWindow)
-  protected
+    {%region --- 1. Подготовительный этап. ------------------------ /fold}
+  protected // "ideMenuItem" управления вкладками
    _ideMenuItem_closeSINGLE_:TIDEMenuItem;
-    procedure _ideMenuItem_closeSINGLE_reFIND_;
-  protected
    _ideMenuItem_closeINVERT_:TIDEMenuItem;
+    procedure _ideMenuItem_closeSINGLE_reFIND_;
     procedure _ideMenuItem_closeINVERT_reFIND_;
-  protected
-    procedure _ideMenuItem_reFIND_;
-  protected
-   _fucUp_:tFuckUP_TPageControl_onDblCLK;
-  protected
+  protected //< поиск компанента на окне
     function  _srcNoteBook_TST_(const sender:TControl):boolean;
     function  _srcNoteBook_FND_(const sender:TCustomForm):TControl;
+  protected //< для "двойного клика"
+   _subEvent_4_srcNoteBook_onDblCLK_:tFuckUP_TPageControl_onDblCLK;
+    {%endRegion}
+    {%region --- 2. Работа. --------------------------------------- /fold}
   protected
-  protected
+    function  _makePageLIST_(const Control:TPageControl; const GoForward:boolean):tList;
+  protected //< выполнение ЦЕЛЕВЫХ действий
     procedure _close_SINGLE_(const Control:TPageControl);
     procedure _close_INVERT_(const Control:TPageControl);
-    function  _makePageLIST_(const Control:TPageControl; const GoForward:boolean):tList;
     procedure _close_ppPxxx_(const Control:TPageControl);
     procedure _close_xxxPpp_(const Control:TPageControl);
-  protected
-    procedure _wrkEvent_(const sender:tObject); override;
-    procedure _wrkEvent_dblClk(const Control:TPageControl; const Message:Cardinal);
+    {%endRegion}
+  protected //< событие - для ПОДГОТОВИТЕЛЬНОГО этапа
+    procedure _wrkEvent_onActivate_(const sender:tObject); override;
+  protected //< событие - РАБОТА
+    procedure _wrkEvent_onDblClick_(const Control:TPageControl; const Message:Cardinal);
   public
     constructor Create;
     destructor DESTROY; override;
@@ -66,7 +99,6 @@ implementation {%region --- возня с ДЕБАГОМ (включить/вы�
 {$endIf}
 {%endregion}
 {%region --- QuestionDialog .. rePlace/reStore -------------------- /fold}
-
 // определяем в КАКОМ именно ЮНИТ использовать
 {$if (lcl_major<2)}
   {$define ideDialogs_IDEDialogs}
@@ -90,52 +122,19 @@ begin
     inherited;
    _ideMenuItem_closeSINGLE_:=nil;
    _ideMenuItem_closeINVERT_:=nil;
-   _fucUp_:=tFuckUP_TPageControl_onDblCLK.Create;
-   _fucUp_.OnMouseDblCLK:=@_wrkEvent_dblClk;
+   _subEvent_4_srcNoteBook_onDblCLK_:=tFuckUP_TPageControl_onDblCLK.Create;
+   _subEvent_4_srcNoteBook_onDblCLK_.OnMouseDblCLK:=@_wrkEvent_onDblClick_;
 end;
 
 destructor tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick.DESTROY;
 begin
     inherited;
-   _fucUp_.FREE;
+   _subEvent_4_srcNoteBook_onDblCLK_.FREE;
 end;
 
-//------------------------------------------------------------------------------
+//==============================================================================
 
-function tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._srcNoteBook_TST_(const sender:TControl):boolean;
-begin {todo: возможно это менять под РАЗНЫЕ версии}
-    result:=Assigned(sender) and (sender is TExtendedNotebook);
-end;
-
-function tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._srcNoteBook_FND_(const sender:TCustomForm):TControl;
-var i:integer;
-begin
-    result:=nil;
-    for i:=0 to TCustomForm(sender).ControlCount-1 do begin
-        if _srcNoteBook_TST_(sender.Controls[i]) then begin
-            result:=sender.Controls[i];
-            BREAK;
-        end;
-    end;
-    {$ifDef _debugLOG_}
-    if Assigned(result)
-    then DEBUG(self.ClassName+'._srcNoteBook_FND_', 'control:'+result.ClassName+addr2txt(result))
-    else DEBUG(self.ClassName+'._srcNoteBook_FND_', 'control: NOT found')
-    {$endIf}
-end;
-
-procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._wrkEvent_(const sender: tObject);
-var tmp:TControl;
-begin
-    if NOT ( Assigned(sender) and (sender is TCustomForm) ) then EXIT;
-    //---
-    tmp:=_srcNoteBook_FND_(TCustomForm(sender));
-    if Assigned(tmp) then _fucUp_.Applay4Control(tmp);
-    //
-   _ideMenuItem_reFIND_;
-end;
-
-//------------------------------------------------------------------------------
+{%region --- _ideMenuItem_.. -------------------------------------- /fold}
 
 const //< смело, но оно работает пока
  _c_ideMenuItem_closeSINGLE_name_='Close Page';
@@ -183,17 +182,50 @@ begin
     end;
 end;
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+{%endregion --- _ideMenuItem_closeSINGLE_ -------------------------- /fold}
 
-procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._ideMenuItem_reFIND_;
+//------------------------------------------------------------------------------
+
+function tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._srcNoteBook_TST_(const sender:TControl):boolean;
+begin {todo: возможно это менять под РАЗНЫЕ версии}
+    result:=Assigned(sender) and (sender is TExtendedNotebook);
+end;
+
+function tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._srcNoteBook_FND_(const sender:TCustomForm):TControl;
+var i:integer;
 begin
-   _ideMenuItem_closeSINGLE_reFIND_;
-   _ideMenuItem_closeINVERT_reFIND_;
+    result:=nil;
+    for i:=0 to TCustomForm(sender).ControlCount-1 do begin
+        if _srcNoteBook_TST_(sender.Controls[i]) then begin
+            result:=sender.Controls[i];
+            BREAK;
+        end;
+    end;
+    {$ifDef _debugLOG_}
+    if Assigned(result)
+    then DEBUG(self.ClassName+'._srcNoteBook_FND_', 'control:'+result.ClassName+addr2txt(result))
+    else DEBUG(self.ClassName+'._srcNoteBook_FND_', 'control: NOT found')
+    {$endIf}
 end;
 
 //------------------------------------------------------------------------------
 
+procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._wrkEvent_onActivate_(const sender: tObject);
+var tmp:TControl;
+begin
+    if NOT ( Assigned(sender) and (sender is TCustomForm) ) then EXIT;
+    // подменяем события для отлова ДвойныхКликов
+    tmp:=_srcNoteBook_FND_(TCustomForm(sender));
+    if Assigned(tmp) then _subEvent_4_srcNoteBook_onDblCLK_.Applay4Control(tmp);
+    // перенаходим Ide команды
+   _ideMenuItem_closeSINGLE_reFIND_;
+   _ideMenuItem_closeINVERT_reFIND_;
+end;
+
+//==================================================[ ОСНОВНОЕ целевое событие ]
+
 {%region --- thread singleIDEMenuItem ----------------------------- /fold}
+
 type
 _tWRK_singleIDEMenuItem_=class(TThread)
   private
@@ -242,34 +274,6 @@ begin
 end;
 
 {%endregion  thread singleIDEMenuItem}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-// закрыть "АКТИВНУЮ" страницу
-procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._close_SINGLE_(const Control:TPageControl);
-begin
-    try
-       _tWRK_singleIDEMenuItem_.Create(_ideMenuItem_closeSINGLE_,Control.ActivePage).Start;
-    except
-        {$ifDef _debugLOG_}
-        on E:Exception do DEBUG(self.ClassName+addr2txt(self),'Exception: '+E.Message);
-        {$endIf}
-    end;
-end;
-
-// закрыть ВСЕ кроме "активной"
-procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._close_INVERT_(const Control:TPageControl);
-begin
-    try
-       _tWRK_singleIDEMenuItem_.Create(_ideMenuItem_closeINVERT_,Control.ActivePage).Start;
-    except
-        {$ifDef _debugLOG_}
-        on E:Exception do DEBUG(self.ClassName+addr2txt(self),'Exception: '+E.Message);
-        {$endIf}
-    end;
-end;
-
-//------------------------------------------------------------------------------
 
 {%region --- thread Close_ListOfPAGEs ----------------------------- /fold}
 // !!! ОСОБЕННОСТЬ !!!
@@ -453,6 +457,32 @@ begin
     end;
 end;
 
+//------------------------------------------------------------------------------
+
+// закрыть "АКТИВНУЮ" страницу
+procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._close_SINGLE_(const Control:TPageControl);
+begin
+    try
+       _tWRK_singleIDEMenuItem_.Create(_ideMenuItem_closeSINGLE_,Control.ActivePage).Start;
+    except
+        {$ifDef _debugLOG_}
+        on E:Exception do DEBUG(self.ClassName+addr2txt(self),'Exception: '+E.Message);
+        {$endIf}
+    end;
+end;
+
+// закрыть ВСЕ кроме "активной"
+procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._close_INVERT_(const Control:TPageControl);
+begin
+    try
+       _tWRK_singleIDEMenuItem_.Create(_ideMenuItem_closeINVERT_,Control.ActivePage).Start;
+    except
+        {$ifDef _debugLOG_}
+        on E:Exception do DEBUG(self.ClassName+addr2txt(self),'Exception: '+E.Message);
+        {$endIf}
+    end;
+end;
+
 // закрыть все СПРАВА от "активной"
 procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._close_ppPxxx_(const Control:TPageControl);
 var list:TList;
@@ -471,18 +501,18 @@ end;
 
 //------------------------------------------------------------------------------
 
-procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._wrkEvent_dblClk(const Control:TPageControl; const Message:Cardinal);
+procedure tIn0k_LazIdePLG__wndSourceEdit_closeTabsOnDblClick._wrkEvent_onDblClick_(const Control:TPageControl; const Message:Cardinal);
 var ShiftState:TShiftState;
 begin
     try if Message=LM_LBUTTONDBLCLK then begin
             ShiftState:=GetKeyShiftState;
-            if ShiftState=[] then _close_SINGLE_(Control)
+            if ShiftState=[]        then _close_SINGLE_(Control)
             else
             if ShiftState=[ssShift] then _close_INVERT_(Control)
             else
-            if ShiftState=[ssAlt] then _close_ppPxxx_(Control)
+            if ShiftState=[ssAlt]   then _close_ppPxxx_(Control)
             else
-            if ShiftState=[ssCtrl] then _close_xxxPpp_(Control);
+            if ShiftState=[ssCtrl]  then _close_xxxPpp_(Control);
         end;
     except
         {$ifDef _debugLOG_}

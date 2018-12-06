@@ -12,6 +12,7 @@ uses {$ifDef in0k_LazarusIdeEXT__DEBUG} in0k_lazarusIdeSRC__wndDEBUG, {$endIf}
   Controls,
   ComCtrls,
   Types,
+  Classes,
   //--
   LMessages;
 
@@ -33,6 +34,9 @@ type
   public
     constructor Create;
   end;
+
+// OnMouseDown
+
 
 implementation {%region --- возня с ДЕБАГОМ (включить/выключить) -- /fold}
 {$define DEBUG_ON} //< ВКЛЮЧИТЬ ЛОКАЛЬНЫЙ `DEBUG` режим
@@ -92,6 +96,14 @@ type
      function _wndProc_COMMON_LCL_handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal; {$ifOpt D-}inline;{$endIf}
      function _wndProc_COMMON_LCL_(const TheMessage:TLMessage):Cardinal;
    {$endIf}
+   {$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
+   protected
+    _ctrl_original_OnMouseDown_:TMouseEvent;
+     procedure _my_OnMouseDown_(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
+   {$endIf}
+   protected
+     procedure fuckUP__onSET; override; //< дополнительный "сабЕвентинг"
+     procedure fuckUP__onCLR; override; //< очистка "сабЕвентинга"
    protected
      procedure fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage); override;
    end;
@@ -138,6 +150,46 @@ begin
     end;
 end;
 {$endIf}
+
+//------------------------------------------------------------------------------
+
+{$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
+
+// Вся "ОРИГИНАЛЬНАЯ" функциональность по закрытию вклядок при нажатии
+// мышки локализована в процедуре
+// `/%lazDIR/ide/SourceEditor.pp:TSourceNotebook.NotebookMouseDown`
+// которая в конечном итоге используется в TPageControl(_ctrl_).OnMouseDown
+//
+// наивное решение. ЗАБАНИТЬ это событие.
+
+procedure _tFuckUp_node_._my_OnMouseDown_(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
+begin
+    // пока просто ИГНОРИРУЕМ, потом возможно придется извращаться
+   _ctrl_original_OnMouseDown_(Sender,Button,Shift,X,Y);
+end;
+
+{$endIf}
+
+//------------------------------------------------------------------------------
+
+procedure _tFuckUp_node_.fuckUP__onSET; //< дополнительный "сабЕвентинг"
+begin
+    inherited;
+    //
+    {$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
+   _ctrl_original_OnMouseDown_:=TPageControl(_ctrl_).OnMouseDown;
+    TPageControl(_ctrl_).OnMouseDown:=@_my_OnMouseDown_;
+    {$endIf}
+end;
+
+procedure _tFuckUp_node_.fuckUP__onCLR; //< очистка "сабЕвентинга"
+begin
+    {$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
+    TPageControl(_ctrl_).OnMouseDown:=_ctrl_original_OnMouseDown_;
+    {$endIf}
+    //
+    inherited;
+end;
 
 //------------------------------------------------------------------------------
 

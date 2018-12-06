@@ -12,7 +12,7 @@
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="in0k_LazarusIdeEXT__REGISTER.pas"/>
         <HasRegisterProc Value="True"/>
@@ -50,6 +50,10 @@
         <Filename Value="srcEXT\in0k_lazarusIdeSRC__fuckUpControl\in0k_lazarusIdeSRC__tControl_fuckUpWndProc.pas"/>
         <UnitName Value="in0k_lazarusIdeSRC__tControl_fuckUpWndProc"/>
       </Item9>
+      <Item10>
+        <Filename Value="in0k_LazarusIdeSRC__SETTINGs.pas"/>
+        <UnitName Value="in0k_LazarusIdeSRC__SETTINGs"/>
+      </Item10>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
