@@ -102,8 +102,8 @@ type
      procedure _my_OnMouseDown_(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
    {$endIf}
    protected
-     procedure fuckUP__onSET; override; //< дополнительный "сабЕвентинг"
-     procedure fuckUP__onCLR; override; //< очистка "сабЕвентинга"
+     procedure fuckUP__rePlaceEVNTs(const ctrl:TControl); override; //< дополнительный "сабЕвентинг"
+     procedure fuckUP__reStoreEVNTs(const ctrl:TControl); override; //< очистка "сабЕвентинга"
    protected
      procedure fuckUP__wndProc_BEFO(const {%H-}TheMessage:TLMessage); override;
    end;
@@ -129,7 +129,7 @@ end;
 
 function _tFuckUp_node_._wndProc_COMMON_LCL_handle_(const AMousePos:TPoint; const AButton:Byte; const AMouseDown:Boolean):Cardinal;
 begin
-    result:=CheckMouseButtonDownUp(TWinControl(_ctrl_).Handle,nil,_LastMouseInfo_,AMousePos,AButton,AMouseDown);
+    result:=CheckMouseButtonDownUp(TWinControl(fuckUP__Control).Handle,nil,_LastMouseInfo_,AMousePos,AButton,AMouseDown);
 end;
 
 function _tFuckUp_node_._wndProc_COMMON_LCL_(const TheMessage:TLMessage):Cardinal;
@@ -164,31 +164,29 @@ end;
 
 procedure _tFuckUp_node_._my_OnMouseDown_(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
 begin
+    // !!! doNofing !!!
     // пока просто ИГНОРИРУЕМ, потом возможно придется извращаться
-   _ctrl_original_OnMouseDown_(Sender,Button,Shift,X,Y);
+    // if Assigned(_ctrl_original_OnMouseDown_)
+    // then _ctrl_original_OnMouseDown_(Sender,Button,Shift,X,Y);
 end;
 
 {$endIf}
 
 //------------------------------------------------------------------------------
 
-procedure _tFuckUp_node_.fuckUP__onSET; //< дополнительный "сабЕвентинг"
+procedure _tFuckUp_node_.fuckUP__rePlaceEVNTs(const ctrl:TControl); //< дополнительный "сабЕвентинг"
 begin
-    inherited;
-    //
     {$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
-   _ctrl_original_OnMouseDown_:=TPageControl(_ctrl_).OnMouseDown;
-    TPageControl(_ctrl_).OnMouseDown:=@_my_OnMouseDown_;
+   _ctrl_original_OnMouseDown_:=TPageControl(ctrl).OnMouseDown;
+    TPageControl(ctrl).OnMouseDown:=@_my_OnMouseDown_;
     {$endIf}
 end;
 
-procedure _tFuckUp_node_.fuckUP__onCLR; //< очистка "сабЕвентинга"
+procedure _tFuckUp_node_.fuckUP__reStoreEVNTs(const ctrl:TControl); //< очистка "сабЕвентинга"
 begin
     {$ifDef in0k_LazarusIdeEXT---disableDefaultBehavior}
-    TPageControl(_ctrl_).OnMouseDown:=_ctrl_original_OnMouseDown_;
+    TPageControl(ctrl).OnMouseDown:=_ctrl_original_OnMouseDown_;
     {$endIf}
-    //
-    inherited;
 end;
 
 //------------------------------------------------------------------------------
@@ -209,7 +207,7 @@ begin
        (r = LM_XBUTTONDBLCLK)
     then begin
         // СЛУЧИЛОСЬ! событие Двойной-Клик случилось!
-        tFuckUP_TPageControl_onDblCLK(_OWNER_)._do_EVENT_(_ctrl_,r);
+        tFuckUP_TPageControl_onDblCLK(_OWNER_)._do_EVENT_(fuckUP__Control,r);
     end;
 end;
 
